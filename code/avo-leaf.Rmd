@@ -1,0 +1,426 @@
+---
+title: "avo nutrients"
+output: 
+ github_document: default
+ 
+always_allow_html: true
+---
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, results='hide')
+
+# https://yihui.org/knitr/options/
+
+# echo: (TRUE; logical or numeric) Whether to display the source code
+# results: ('markup'; character) Controls how to display the text results.
+# warning: (TRUE; logical) Whether to preserve warnings
+# error: (TRUE; logical) Whether to preserve errors
+# include: (TRUE; logical) Whether to include the chunk output in the output document.
+# 
+#$$$$$$$$$$$$
+```
+
+```{r localCode, echo=FALSE, results=FALSE, include=FALSE}
+##
+
+library(tidyverse)
+library(dplyr)
+
+setwd("/Users/rcphelps/code/avo-soil-leaf-data")
+
+leaf.url <- c("https://raw.githubusercontent.com/cordphelps/soil-leaf-reports/master/dataCSV/leafData.csv")
+
+leaf.tibl <- dplyr::as_tibble(read.csv(file=leaf.url, header=TRUE, row.names=NULL))
+
+material.url <- c("https://raw.githubusercontent.com/cordphelps/soil-leaf-reports/master/dataCSV/material-injection-history.csv")
+
+# get gallons of material by year for N and K with high and low ranges
+material.tibl <- dplyr::as_tibble(read.csv(file=material.url, header=TRUE, row.names=NULL))
+
+gg <- plotMaterialAnnual(leaf.tibl, label="leaf mineral composition ", path=output.path, xaxis, material=leafMaterial, material.history=material.tibl)
+
+  if (TRUE) {
+      
+      fileName <- paste("NK", "-byBlock.pdf", sep="")
+      wd <- getwd() 
+      dirPath <- paste(wd, "/output", sep="")
+      fullPath <- paste(wd, "/output/", fileName, sep="")
+
+      if (file.exists(fullPath)) { file.remove(fullPath) }
+
+      suppressMessages(ggsave(fileName, plot = gg, device = NULL, path = dirPath,
+       scale = 1, width = 8, height = NA, dpi = 300, limitsize = TRUE,
+       units = "in") )
+      
+      print(paste( "saved ", fullPath, sep=" "))
+  }
+
+
+  
+  leaf.url <- c("https://raw.githubusercontent.com/cordphelps/soil-leaf-reports/master/dataCSV/leafData.csv")
+  
+  tibl <- dplyr::as_tibble(read.csv(file=leaf.url, header=TRUE, row.names=NULL))
+  
+  plotMaterialMonthly(tibble=tibl) 
+  
+
+```
+
+
+```{r localCode2, echo=FALSE, results=FALSE, include=FALSE}
+
+plotMaterialAnnual <- function(tibble, label, path, xaxis, material, material.history) {
+  
+  leafPhelpsAnnual.tibl <- tibble %>% dplyr::filter(ranch == 'phelps')
+  leafHuffAnnual.tibl <- tibble %>% dplyr::filter(ranch == 'huff')
+  
+  # make a vector of character strings representing the years identified in the data
+  #yearsWithData <- c('2010', '2012', '2013', '2014', '2015', '2016', '2018', '2019', '2021', '2022')
+  yearsWithData <- as.character(pull((tibble %>% dplyr::distinct(year)), year))
+  
+  # get range (caution: the result is a 'dataframe'; use as.numeric() )
+  k.high <- material.tibl %>% slice(1) %>% select(K.range.high)
+  k.low <- material.tibl %>% slice(1) %>% select(K.range.low)
+  n.high <- material.tibl %>% slice(1) %>% select(N.range.high)
+  n.low <- material.tibl %>% slice(1) %>% select(N.range.low) 
+  
+  gg <- ggplot(leafPhelpsAnnual.tibl, aes(x = as.character(year), y = Potassium ) ) +
+
+    # add a colored rectangle highlighting the high/low range (%) 
+    # 'Inf' works on the categorical axis
+    annotate("rect", xmin = -Inf, xmax = Inf, 
+              ymin = as.numeric(k.low), ymax = as.numeric(k.high),
+              alpha = .3, fill = "#5ac5e8") +
+    
+    # add high/low range (%) for material measured in leaf tissue analysis 
+    geom_hline(yintercept=c(as.numeric(k.low), as.numeric(k.high)),  linetype='twodash') +
+    
+    annotate("rect", xmin = -Inf, xmax = Inf, 
+              ymin = as.numeric(n.low), ymax = as.numeric(n.high),
+              alpha = .3, fill = "#66CC99")  + 
+        
+    geom_hline(yintercept=c(as.numeric(n.low), as.numeric(n.high)), linetype='dotted') +
+ 
+
+ 
+    geom_boxplot(aes(group = year), fill="#21b8eb", alpha=0.4, outlier.shape=1) + 
+    #stat_summary(fun = mean, geom="point", size=3) + 
+    #stat_summary(fun.data = mean_se, geom = "errorbar") +
+    
+    geom_jitter(data=leafHuffAnnual.tibl, 
+                aes(x = as.character(year), y = Potassium),
+                    color = "black", fill = "#8f9596", 
+                    shape = 21, size = 3, width=0.1) +
+    
+    geom_jitter(data=leafPhelpsAnnual.tibl, 
+                aes(x = as.character(year), y = Potassium),
+                    color = "black", fill = "white", 
+                    shape = 21, size = 3, width=0.1) +
+    # geom_smooth(formula = y ~ x, method = lm, se = FALSE) +
+    
+   
+    
+    
+    geom_boxplot( aes(group = year, y = Nitrogen), 
+                  fill="#1ee682", alpha=0.4, outlier.shape=1) + 
+    
+    geom_jitter(data=leafPhelpsAnnual.tibl, 
+                aes(x = as.character(year), y = Nitrogen),
+                    color = "black", fill = "white", 
+                    shape = 21, size = 3, width=0.1) +
+
+       
+    
+    
+    # discrete axis determines boxplot orientation
+    #scale_x_discrete(breaks = seq(min(2010), max(2024), by = 1)) +
+    scale_x_discrete(limits=as.character(yearsWithData)) +
+
+    scale_y_continuous(limits=c(.5, 3.75), 
+                       breaks = seq(min(0), max(as.numeric(n.high) + .15), 
+                                by = .25)) +
+
+  	labs(x = "year", y ="percent", 
+ 				  title = paste(label, " ", sep="")) +
+    
+    # set default color for each group (otherwise geom_text text labels are "red")
+    # https://stackoverflow.com/questions/41541708/how-to-change-font-color-in-geom-text-in-ggplot2-in-r
+    # << or >>
+    # https://stackoverflow.com/questions/61209218/changing-of-color-for-geom-text-gives-completely-different-color-then-called-for
+    scale_colour_manual(values=c("#000000")) +
+    
+    theme_bw()  +
+    # turn off legend
+    theme(legend.position="none")
+  
+    if (TRUE) {
+    # add labels for the amount of K injected each year
+      for (i in 1:length(yearsWithData)) { 
+        
+        k.gallons <- material.history %>% 
+          filter(year==yearsWithData[[i]])  %>% 
+          pull(K..gallons.)
+        
+        n.gallons <- material.history %>% 
+          filter(year==yearsWithData[[i]])  %>% 
+          pull(N..gallons.)
+        
+        content.string <- paste(n.gallons, " : ", k.gallons, sep="")
+        
+        # print( yearsWithData[[i]])
+        
+        gg <- gg + makeLabels(content=content.string, 
+                        x.position=yearsWithData[[i]], 
+                        y.position = 3.33)
+      }
+    }
+  
+      if (TRUE) {
+            
+        gg <- gg + labs( subtitle = paste(
+                                "nitrogen (green) optimum range: ", 
+                                as.numeric(n.low), " to ", 
+                                as.numeric(n.high), " percent\n", 
+                                "potassium (blue) optimum range: ", 
+                                as.numeric(k.low), " to ", 
+                                as.numeric(k.high), " percent\n", 
+                                "white data points = phelps, black = huff", sep="")) 
+          
+       
+        # add an arrow and a label of explanation
+          
+        gg <- gg + geom_hline(yintercept = 3.5, linetype='solid')
+            
+        # add an arrow and a label of explanation
+          
+        gg <- gg + geom_curve(x = 6.5, y = 3.7,
+                            xend = 4, yend = 3.55,
+                            color = "black", arrow = arrow())
+          
+        gg <- gg + geom_label(aes(label="annual N:K applied (gallons)"), 
+                                    x = 8, y = 3.65, 
+                              fill = "white")          
+          
+    }
+  
+  return(gg)
+}
+
+makeLabels <- function(content, x.position, y.position) {
+  # build and return a ggplot layer of labels that correspond to metrics
+  # associated with x axis intervals.
+  
+  # https://r-graph-gallery.com/275-add-text-labels-with-ggplot2.html
+  
+  print(paste( content, x.position, y.position, sep=" "))
+  
+  gg.label <- geom_text(aes(x=x.position, y=y.position,
+                            label=content, angle= 22, colour = "black"), size = 3)
+                          #group=as.character(x.position),
+                          #  size = 0.35,
+    
+  return(gg.label)
+}
+
+stripMisc <- function(tibble) {
+  tibble <- tibble %>% 
+  dplyr::filter(location != "four") %>% 
+  dplyr::filter(location != "old") %>% 
+  dplyr::filter(location != "long") %>% 
+  dplyr::filter(location != "wind30") %>% 
+  dplyr::filter(location != "old30") %>% 
+  dplyr::filter(location != "long30")
+  return(tibble)
+}
+
+```
+
+
+```{r}
+
+
+plotMaterialMonthly <- function(tibble) {
+  
+  #leaf.url <- c("https://raw.githubusercontent.com/cordphelps/soil-leaf-reports/master/dataCSV/leafData.csv")
+  
+  #tibble <- dplyr::as_tibble(read.csv(file=leaf.url, header=TRUE, row.names=NULL))
+  
+  
+  leafPhelpsMonthly.tibl <- tibble %>% 
+    dplyr::filter(ranch == 'phelps') %>%
+    dplyr::filter(location == 'block1' | location == 'block2')
+                                
+  
+  gg <- ggplot(leafPhelpsMonthly.tibl, aes(x = as.character(month), y = Potassium ) ) +
+    
+    
+    geom_jitter(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block1'), 
+                aes(x = as.character(month), y = Potassium),
+                    color = "black", fill = "green", 
+                    shape = 21, size = 3, width=0.1) +
+    
+    geom_jitter(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block2'), 
+                aes(x = as.character(month), y = Potassium),
+                    color = "black", fill = "red", 
+                    shape = 21, size = 3, width=0.1) +
+    
+    geom_jitter(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block1'), 
+                aes(x = as.character(month), y = Nitrogen),
+                    color = "black", fill = "green", 
+                    shape = 25, size = 3, width=0.1) +
+
+    geom_jitter(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block2'), 
+                aes(x = as.character(month), y = Nitrogen),
+                    color = "black", fill = "red", 
+                    shape = 25, size = 3, width=0.1) +
+
+    scale_y_continuous(limits=c(.25, 3.25),
+                       breaks = seq(min(0), max(3.25), by = .25) ) +
+
+  	labs(x = "month", y ="percent", 
+ 				  title = paste("monthly leaf mineral levels",
+ 				                sep=""),
+ 				  subtitle = paste("nitrogen (triangle), potassium (circle)\n",
+ 				                   "new orchard (green), camino corto (red)\n",
+ 				                   "(confidence intervals unknown)",
+ 				                sep=""),
+ 				  ) +
+    
+    # set default color for each group (otherwise geom_text text labels are "red")
+    # https://stackoverflow.com/questions/41541708/how-to-change-font-color-in-geom-text-in-ggplot2-in-r
+    # << or >>
+    # https://stackoverflow.com/questions/61209218/changing-of-color-for-geom-text-gives-completely-different-color-then-called-for
+    scale_colour_manual(values=c("#000000")) +
+    
+    theme_bw()  +
+    # turn off legend
+    theme(legend.position="none")
+  
+    print(gg)
+      
+    if (TRUE) {
+      
+      setwd("/Users/rcphelps/code/avo-soil-leaf-data/")
+      
+      fileName <- paste("NK", "-monthly.pdf", sep="")
+      wd <- getwd() 
+      dirPath <- paste(wd, "/output", sep="")
+      fullPath <- paste(dirPath, "/", fileName, sep="")
+
+      if (file.exists(fullPath)) { file.remove(fullPath) }
+
+      suppressMessages(ggsave(fileName, plot = gg, device = NULL, path = dirPath,
+       scale = 1, width = 8, height = NA, dpi = 300, limitsize = TRUE,
+       units = "in") )
+      
+      print(paste( "saved ", fullPath, sep=" "))
+    }
+  
+  return(gg)
+}
+```
+
+
+
+```{r plotMaterialAnnual, echo=FALSE, results=FALSE, error=F, warning=F, include=T}
+
+# https://www.tidymodels.org/start/models/
+
+
+if (FALSE) {
+
+  soilMaterial <- c("nitrateNitrogen",
+                  "phosphorousP2O5",
+                  "potassiumK2OExch",
+                  "potassiumK2OSol",
+                  "calciumExch",
+                  "calciumSol",
+                  "magnesiumExch",
+                  "magnesiumSol",
+                  "sodiumExch",
+                  "sodiumSol",
+                  "sulfate",
+                  "zinc",
+                  "manganese",
+                  "iron",
+                  "copper",
+                  "boron",
+                  "chloride")
+
+  for (i in soilMaterial) {
+    gg <- plotMaterialAnnual(tibble=soil.tibl, label="soil", path=output.path, xaxis="year", material=i)
+    print(gg)
+  }
+
+}
+
+leafMaterial <- c("Nitrogen",
+                  "Phosphorous",
+                  "Potassium",
+                  "Calcium",
+                  "Magnesium",
+                  "Zinc",
+                  "Manganese",
+                  "Iron",
+                  "Copper",
+                  "Boron",
+                  "Sodium")
+
+for (i in leafMaterial) {
+  gg <- plotMaterialAnnual(tibble=leaf.tibl, label="leaf", path=output.path, xaxis="year", material=i)
+  
+  if (TRUE) {
+    print(gg)
+  }
+}
+
+
+```
+
+```{r}
+
+source.url <- c("/Volumes/GoogleDrive/My\ Drive/other/avo/soil-leaf-reports/soil-leaf-data/dataCSV/binsNitrogenPotassium.csv")
+binsNP.tibl <- dplyr::as_tibble(read.csv(source.url, header=TRUE, row.names=NULL))
+
+binsNP.tibl <- binsNP.tibl %>% 
+  dplyr::filter(year != 2017)
+
+gg <- ggplot(binsNP.tibl, aes(x = year ) ) + 
+    
+            geom_point(aes(y=bins), shape = 21, color = "black", fill = "white", size = 3) + 
+            geom_smooth(aes(x=year, y=bins), formula = y ~ x, method = loess, se=F, size=1) +
+  
+            geom_point(aes(y=Nitrogen), shape = 22, color = "black", fill = "green", size = 3) +              geom_smooth(aes(x=year, y=Nitrogen), formula = y ~ x, method = loess, se=F, size=1) +
+
+            geom_point(aes(y=Potassium), shape = 23, color = "black", fill = "blue", size = 3) + 
+            geom_smooth(aes(x=year, y=Potassium), formula = y ~ x, method = loess, se=F, size=1) +
+              
+              
+            xlim(2010, 2022) +
+            ylim(0,1300) +
+
+            scale_x_continuous(limits = c(2010, 2022), 
+                               breaks = seq(min(2010), max(2022), by = 1)) +
+
+  	        labs(	x = "year",  y = " ",
+ 					    title = paste("bins, \nNitrogen (gallons)\nPotassium (gallons)\n(ignore 2017)", sep="")) +
+    
+            theme_bw() 
+
+    path <- "/Volumes/GoogleDrive/My\ Drive/other/avo/soil-leaf-reports/soil-leaf-data/output"
+
+    fileName <- paste("bins-N-K.pdf", sep="")
+    fullPath <- paste(path, "/", fileName, sep="")
+
+    if (file.exists(fullPath)) { file.remove(fullPath) }
+
+    suppressMessages(ggsave(fileName, plot = gg, device = NULL, path = path,
+       scale = 1, width = 8, height = NA, dpi = 300, limitsize = TRUE,
+       units = "in") )
+
+
+```
+
