@@ -29,9 +29,9 @@ knitr::opts_chunk$set(echo = FALSE, results='hide')
 library(tidyverse)
 library(dplyr)
 
-setwd("/Users/rcphelps/code/avo-soil-leaf-data")
+setwd("/Users/rcphelps/code/avoNutrients")
 
-leaf.url <- c("https://raw.githubusercontent.com/cordphelps/soil-leaf-reports/master/dataCSV/leafData.csv")
+leaf.url <- c("https://raw.githubusercontent.com/cordphelps/avoNutrients/master/dataCSV/leafData.csv")
 
 leaf.tibl <- dplyr::as_tibble(read.csv(file=leaf.url, header=TRUE, row.names=NULL))
 
@@ -60,7 +60,7 @@ gg <- plotMaterialAnnual(leaf.tibl, label="leaf mineral composition ", path=outp
 
 
   
-  leaf.url <- c("https://raw.githubusercontent.com/cordphelps/soil-leaf-reports/master/dataCSV/leafData.csv")
+  leaf.url <- c("https://raw.githubusercontent.com/cordphelps/avoNutrients/master/dataCSV/leafData.csv")
   
   tibl <- dplyr::as_tibble(read.csv(file=leaf.url, header=TRUE, row.names=NULL))
   
@@ -303,7 +303,7 @@ plotMaterialMonthly <- function(tibble) {
       
     if (TRUE) {
       
-      setwd("/Users/rcphelps/code/avo-soil-leaf-data/")
+      setwd("/Users/rcphelps/code/avoNutrients/")
       
       fileName <- paste("NK", "-monthly.pdf", sep="")
       wd <- getwd() 
