@@ -260,30 +260,47 @@ plotMaterialMonthly <- function(tibble) {
     geom_jitter(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block1'), 
                 aes(x = as.character(month), y = Potassium),
                     color = "black", fill = "green", 
-                    shape = 21, size = 3, width=0.1) +
+                    shape = 21, size = 3, 
+                position = position_nudge(x = 0.1) ) +
     
     geom_jitter(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block2'), 
                 aes(x = as.character(month), y = Potassium),
                     color = "black", fill = "red", 
-                    shape = 21, size = 3, width=0.1) +
+                    shape = 21, size = 3, 
+                position = position_nudge(x = -0.1) ) +
     
-    geom_jitter(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block1'), 
+    geom_point(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block1'), 
+                aes(x = as.character(month), y = Magnesium),
+                    color = "black", fill = "green", 
+                    shape = 22, size = 3,
+                    position = position_nudge(x = 0.1) ) +
+    
+    geom_point(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block2'), 
+                aes(x = as.character(month), y = Magnesium),
+                    color = "black", fill = "red", 
+                    shape = 22, size = 3,   
+                    position = position_nudge(x = -0.1) ) +
+    
+    geom_point(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block1'), 
                 aes(x = as.character(month), y = Nitrogen),
                     color = "black", fill = "green", 
-                    shape = 25, size = 3, width=0.1) +
+                    shape = 25, size = 3, 
+                    position = position_nudge(x = 0.1) ) +
 
-    geom_jitter(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block2'), 
+    geom_point(data=leafPhelpsMonthly.tibl %>% dplyr::filter(location == 'block2'), 
                 aes(x = as.character(month), y = Nitrogen),
                     color = "black", fill = "red", 
-                    shape = 25, size = 3, width=0.1) +
+                    shape = 25, size = 3, 
+                    position = position_nudge(x = -0.1) ) +
 
     scale_y_continuous(limits=c(.25, 3.25),
+                       trans='log10',
                        breaks = seq(min(0), max(3.25), by = .25) ) +
 
   	labs(x = "month", y ="percent", 
  				  title = paste("monthly leaf mineral levels",
  				                sep=""),
- 				  subtitle = paste("nitrogen (triangle), potassium (circle)\n",
+ 				  subtitle = paste("nitrogen (triangle), potassium (circle), magnesium (square)\n",
  				                   "new orchard (green), camino corto (red)\n",
  				                   "(confidence intervals unknown)",
  				                sep=""),
