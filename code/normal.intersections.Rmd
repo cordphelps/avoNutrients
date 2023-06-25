@@ -1,0 +1,153 @@
+---
+title: "stdDev"
+output: 
+ github_document: default
+ 
+always_allow_html: true
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+library(tidyverse)
+library(dplyr) 
+
+# http://www.cookbook-r.com/Graphs/Plotting_distributions_(ggplot2)/
+
+set.seed(1)
+ave1 <- 2.5
+ave2 <- ave1 + (2 * ave1)
+ave3 <- 5
+
+u <- seq(from=0, to=1, by=1/20000)
+v1 <- rnorm(n=u, mean= ave1, sd= ave1 / 3 )
+v2 <- rnorm(n=u, mean= ave2, sd= ave1 / 3 )
+v3 <- rnorm(n=u, mean= ave3, sd= ave1 / 1.5 ) # catches both extremes
+v4 <- rnorm(n=u, mean= ave3, sd= ave1 / 2 )
+v5 <- rnorm(n=u, mean= ave3, sd= ave1 / 2.5 )
+t.tbl <- tibble(u, v1)
+
+
+# Density curve
+ggplot() + 
+  geom_density(data=t.tbl, aes(x=v1), color="purple",
+    fill="#69b3a2", alpha = .2) +
+  geom_density(data=t.tbl, aes(x=v2), color="purple",
+    fill="#69b3a2", alpha = .2) +
+  geom_density(data=t.tbl, aes(x=v3), color="purple",
+    fill="blue", alpha = .2) +
+
+  xlim(0,12)
+
+
+
+```
+
+
+```{r}
+
+# given a the sample mean, estimate the 95% confidence interval for
+# subsequent samples of the mean.
+
+# theory says that the distribution of sample means will be gaussian
+# https://en.wikipedia.org/wiki/Standard_error
+
+# assuming that the minimum possible value of the sample mean must be greater than 0 and 
+# that it lies at the bottom of the 95% sample mean confidence interval, it is therefore 
+# approx equal to one standard deviation of the sample means and 4 standard deviation of 
+# the sample means from the top of the 95% sample mean confidence interval. 
+
+# what if the sample mean is actually at the top of the 95% sample mean confidence interval?
+# in this case, the standard deviation of the sample means is 4 times smaller than the 
+# original estimate.
+
+
+
+sample.mean <- 1
+
+
+x.point <- sample.mean
+y.point <- dnorm(x=x.point, mean=(sample.mean * 3), sd=(sample.mean - 0))
+# the standard deviation of the mean itself (which is the standard error)
+# https://en.wikipedia.org/wiki/Standard_error
+
+# calculate the y value for each standard deviation multiple
+# sample is at the bottom of the 95% interval
+sd1.y.point <- dnorm(x=sample.mean, mean=(sample.mean * 3), sd=(sample.mean - 0))
+sd2.y.point <- dnorm(x=sample.mean*2, mean=(sample.mean * 3), sd=(sample.mean - 0))
+sd3.y.point <- dnorm(x=sample.mean*3, mean=(sample.mean * 3), sd=(sample.mean - 0))
+sd4.y.point <- dnorm(x=sample.mean*4, mean=(sample.mean * 3), sd=(sample.mean - 0))
+sd5.y.point <- dnorm(x=sample.mean*5, mean=(sample.mean * 3), sd=(sample.mean - 0))
+sd6.y.point <- dnorm(x=sample.mean*6, mean=(sample.mean * 3), sd=(sample.mean - 0))
+
+# calculate the y value for each standard deviation multiple
+# sample is at the top of the 95% interval
+sd1.y.top.point <- dnorm(x=sample.mean, mean=(sample.mean * 3/5), sd=(sample.mean / 5))
+sd2.y.top.point <- dnorm(x=sample.mean*2, mean=(sample.mean * 3/5), sd=(sample.mean / 5))
+sd3.y.top.point <- dnorm(x=sample.mean*3, mean=(sample.mean * 3/5), sd=(sample.mean / 5))
+sd4.y.top.point <- dnorm(x=sample.mean*4, mean=(sample.mean * 3/5), sd=(sample.mean / 5))
+sd5.y.top.point <- dnorm(x=sample.mean*5, mean=(sample.mean * 3/5), sd=(sample.mean / 5))
+sd6.y.top.point <- dnorm(x=sample.mean*6, mean=(sample.mean * 3/5), sd=(sample.mean / 5))
+
+if (FALSE) { 
+  
+  library(ggplot2)
+  
+  # verify the 95% quantile for the distribution that assume sample.mean is at 
+  # the top of the confidence interval
+  
+  # The function qnorm() : given a total area (as a fraction of the total normal 
+  # distribution), find the (x-axis) boundary value that determines this area.
+  #
+  # qnorm(p=.95, mean = sample.mean * 3/5, sd = sample.mean / 5, lower.tail = TRUE)
+  #
+  # lower.tail = TRUE: Then the boundary value capturing the total probability to 
+  # the left of p in the normal distribution is returned. 
+  
+  ggplot() + 
+  
+	stat_function(
+		fun = dnorm, 
+		args = with(data=NULL, c( mean = sample.mean*3, sd = sample.mean ))
+	) + 
+  # geom_point(data=as_tibble(x=x.point, y=y.point), aes(x = x, y = y)) +
+  geom_point(aes(x=x.point, y=y.point), shape=1, size=3, fill="white") +
+  
+  geom_point(aes(x=5, y=y.point), shape=1, size=3, color="blue") +
+  
+  geom_line(data=tibble(x=c(sample.mean*1, sample.mean*1), y=c(sd1.y.point, 0)), aes(x, y), linetype = 3) +
+  geom_line(data=tibble(x=c(sample.mean*2, sample.mean*2), y=c(sd2.y.point, 0)), aes(x, y), linetype = 3) +
+  geom_line(data=tibble(x=c(sample.mean*3, sample.mean*3), y=c(sd3.y.point, 0)), aes(x, y), linetype = 3) +
+  geom_line(data=tibble(x=c(sample.mean*4, sample.mean*4), y=c(sd4.y.point, 0)), aes(x, y), linetype = 3) +
+  geom_line(data=tibble(x=c(sample.mean*5, sample.mean*5), y=c(sd5.y.point, 0)), aes(x, y), linetype = 3) +
+  geom_line(data=tibble(x=c(sample.mean*6, sample.mean*6), y=c(sd6.y.point, 0)), aes(x, y), linetype = 3) +
+  
+  xlim(c(0, sample.mean*7)) +
+    
+	#	args = with(data=NULL, c( mean = sample.mean * 3/6, sd = sample.mean / 6 ))
+  # (divided by 6: 4 SDs to the left of the mean, 2 SDs to the right)
+  #
+	# args = with(data=NULL, c( mean = 0, sd = 1)) 
+  
+  # shift mean by 5% as the sample is imagined to be 2.5% off 
+  # the lower bound
+    
+  stat_function(
+		fun = dnorm, 
+		args = with(data=NULL, c( mean = (sample.mean * 2/4) * 1.05, sd = sample.mean / 4 ))
+	) 
+ 
+  
+}
+
+return 
+
+
+
+```
+

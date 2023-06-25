@@ -35,14 +35,18 @@ leaf.url <- c("https://raw.githubusercontent.com/cordphelps/avoNutrients/master/
 
 leaf.tibl <- dplyr::as_tibble(read.csv(file=leaf.url, header=TRUE, row.names=NULL))
 
-material.url <- c("https://raw.githubusercontent.com/cordphelps/soil-leaf-reports/master/dataCSV/material-injection-history.csv")
+if (FALSE) {
+  
+  material.url <- c("https://raw.githubusercontent.com/cordphelps/soil-leaf-reports/master/dataCSV/material-injection-history.csv")
 
-# get gallons of material by year for N and K with high and low ranges
-material.tibl <- dplyr::as_tibble(read.csv(file=material.url, header=TRUE, row.names=NULL))
+  # get gallons of material by year for N and K with high and low ranges
+  material.tibl <- dplyr::as_tibble(read.csv(file=material.url, header=TRUE, row.names=NULL))
 
-gg <- plotMaterialAnnual(leaf.tibl, label="leaf mineral composition ", path=output.path, xaxis, material=leafMaterial, material.history=material.tibl)
+  gg <- plotMaterialAnnual(leaf.tibl, label="leaf mineral composition ", path=output.path, xaxis, material=leafMaterial, material.history=material.tibl)
+  
+}
 
-  if (TRUE) {
+  if (FALSE) {
       
       fileName <- paste("NK", "-byBlock.pdf", sep="")
       wd <- getwd() 
@@ -64,8 +68,28 @@ gg <- plotMaterialAnnual(leaf.tibl, label="leaf mineral composition ", path=outp
   
   tibl <- dplyr::as_tibble(read.csv(file=leaf.url, header=TRUE, row.names=NULL))
   
-  plotMaterialMonthly(tibble=tibl) 
+  # now calculate the standard error for each sample measurement (sample size = 5)
+  # https://youtu.be/hlM7zdf7zwU 
+  # there is a 95% probability that the true proportion p is within 2 p^
+  # standard deviations of p^
   
+  # SE of the population sample (p^) = sq-root( ( p^ * ( 1 - p^)) / sampleSize)
+  # the 95% confidence interval is 2 SE above the sample proportion and 2 SE 
+  # below the sample proportion
+  # (the standard error (SE) is an unbiased estimator of the standard deviation
+  # of the sampling distribution)
+  # source: kahn academy
+  
+  # read "Student approximation when σ value is unknown" ....
+  # Put simply, the standard error of the sample mean is an estimate of how far
+  # the sample mean is likely to be from the population mean
+  # https://en.wikipedia.org/wiki/Standard_error
+  
+  
+  
+  gg <- plotMaterialMonthly(tibble=tibl) 
+  
+  print(gg)
 
 ```
 
@@ -252,6 +276,26 @@ plotMaterialMonthly <- function(tibble) {
   leafPhelpsMonthly.tibl <- tibble %>% 
     dplyr::filter(ranch == 'phelps') %>%
     dplyr::filter(location == 'block1' | location == 'block2')
+  
+  # add columns representing standard error high/low for nitrogen, potassium, magnesium
+  sampleSize <- 25
+  factorCI <- 1.96
+  tibble <- tibble %>% 
+    tibble::add_column(aveNitrogen = Nitrogen - ( (Nitrogen/2)/sqrt(sampleSize) * factorCI ),
+                       nHigh = Nitrogen + ( (Nitrogen/2)/sqrt(sampleSize) * factorCI ),
+                       kLow = Potassium - ( (Potassium/2)/sqrt(sampleSize) * factorCI ),
+                       kHigh = Potassium + ( (Potassium/2)/sqrt(sampleSize) * factorCI ),
+                       mLow = Magnesium - ( (Magnesium/2)/sqrt(sampleSize) * factorCI ),
+                       mHigh = Magnesium + ( (Magnesium/2)/sqrt(sampleSize) * factorCI )
+                       ) 
+  tibble <- tibble %>% 
+    tibble::add_column(nLow = Nitrogen - ( (Nitrogen/2)/sqrt(sampleSize) * factorCI ),
+                       nHigh = Nitrogen + ( (Nitrogen/2)/sqrt(sampleSize) * factorCI ),
+                       kLow = Potassium - ( (Potassium/2)/sqrt(sampleSize) * factorCI ),
+                       kHigh = Potassium + ( (Potassium/2)/sqrt(sampleSize) * factorCI ),
+                       mLow = Magnesium - ( (Magnesium/2)/sqrt(sampleSize) * factorCI ),
+                       mHigh = Magnesium + ( (Magnesium/2)/sqrt(sampleSize) * factorCI )
+                       ) 
                                 
   
   gg <- ggplot(leafPhelpsMonthly.tibl, aes(x = as.character(month), y = Potassium ) ) +
