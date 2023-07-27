@@ -266,17 +266,34 @@ stripMisc <- function(tibble) {
 ```{r}
 
 
-plotMaterialMonthly <- function(tibble) {
+plotMaterialMonthly <- function(tbl) {
   
-  #leaf.url <- c("https://raw.githubusercontent.com/cordphelps/soil-leaf-reports/master/dataCSV/leafData.csv")
+  if (FALSE) {
+    
+    library(tidyverse)
+    library(dplyr)
+
+    setwd("/Users/rcphelps/code/avoNutrients")
+    
+  leaf.url <- c("https://raw.githubusercontent.com/cordphelps/avoNutrients/master/dataCSV/leafData.csv")
+
+  leaf.tibl <- dplyr::as_tibble(read.csv(file=leaf.url, header=TRUE, row.names=NULL))
   
-  #tibble <- dplyr::as_tibble(read.csv(file=leaf.url, header=TRUE, row.names=NULL))
+  gg <- plotMaterialMonthly(tbl=leaf.tibl) 
+  
+  print(gg)
+    
+  }
   
   
-  leafPhelpsMonthly.tibl <- tibble %>% 
+  
+  
+  leafPhelpsMonthly.tibl <- tbl %>% 
     dplyr::filter(ranch == 'phelps') %>%
     dplyr::filter(location == 'block1' | location == 'block2')
   
+  
+  if (FALSE) {
   # add columns representing standard error high/low for nitrogen, potassium, magnesium
   sampleSize <- 25
   factorCI <- 1.96
@@ -297,6 +314,8 @@ plotMaterialMonthly <- function(tibble) {
                        mHigh = Magnesium + ( (Magnesium/2)/sqrt(sampleSize) * factorCI )
                        ) 
                                 
+  }
+  
   
   gg <- ggplot(leafPhelpsMonthly.tibl, aes(x = as.character(month), y = Potassium ) ) +
     

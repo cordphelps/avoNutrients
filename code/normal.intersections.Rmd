@@ -151,3 +151,142 @@ return
 
 ```
 
+```{r monteCarloOverlap}
+
+# https://www.countbayesie.com/blog/2015/3/3/6-amazing-trick-with-monte-carlo-simulations
+
+runs <- 100000
+a.samples <- rbeta(runs,20,100)
+b.samples <- rbeta(runs,38,110)
+
+if (FALSE) {
+  
+  mc.p.value <- sum(a.samples > b.samples)/runs
+
+  in.circle <- a.samples <= b.samples
+  plot(a.samples,b.samples,pch='.',col=ifelse(in.circle,"blue","grey"), 
+     type = xlab='',ylab='', asp=1, main=paste("p =",mc.p.value))
+
+}
+
+if (FALSE) {
+# https://ggplot2tutor.com/tutorials/sampling_distributions
+
+  ggplot() + 
+  
+	  stat_function(
+      fun = dnorm, geom = "area", linetype = 2, fill = "green", alpha = .5,
+      xlim = c(-2, qnorm(.95)), args = list(mean = 2, sd=.5) )  +
+    
+    stat_function(
+      fun = dnorm, geom = "area", linetype = 2, fill = "blue", alpha = .5,
+      xlim = c(-2, qnorm(.95)), args = list(mean = 1, sd=.5) ) 
+    
+  }
+
+if (FALSE) {
+# https://stackoverflow.com/questions/56762961/overlay-a-normal-density-plot-on-top-of-data-ggplot2
+my.data = rnorm(1000, mean=3, sd=10)
+my.data = rnorm(100, mean=0, sd=5)
+
+ggplot(my.data %>% enframe(), aes(value)) +
+  geom_density(fill = "mediumseagreen", alpha = 0.5) +
+  geom_area(stat = "function", fun = function(x) dnorm(x, mean = 0, sd = 5), fill = "red", alpha = .5) 
+}
+
+x.data = rnorm(100, mean=1, sd=.5)
+y.data = rnorm(100, mean=2, sd=.5)
+enf.tbl <- enframe(x.data, name='x', value='x.value') %>%
+  mutate(y.value=y.data)
+
+enf.tbl <- enf.tbl %>% arrange(x.value, y.value)
+
+ggplot() +
+  
+  geom_point(data=enf.tbl, aes(x=x.value, y=y.value)) +
+  
+  # plot the line x = y
+  stat_function(fun = function(x) { x },  #  <- the return is y (=x)
+                geom = "line") +
+  
+  geom_line(data=enf.tbl, aes(y=x.value, x=y.value))
+
+
+
+
+min.int <- min(enf.tbl$x.value)
+max.int <- max(enf.tbl$x.value)
+bins.int <- 7
+bins.vec <- makeBreaks(lower, upper, bins)
+
+breaks.list <- makeBins(lower=min.int, upper=max.int, bins=bins.int)
+
+temp.tbl <- addBins(input.tbl=enf.tbl, computedBreaks=breaks.list)
+
+
+temp.tbl <- temp.tbl %>%
+              
+
+
+ggplot() +
+  geom_point(temp.tbl, aes(x=bins, y=count(bins)))
+
+
+makeBins <- function(lower, upper, bins) {
+  # for the range from lower to upper,
+  # retrun a vector of evenly spaced bins
+  
+  bin.width <- (upper - lower) / bins
+  
+  vec <- list()
+  
+  # note that cut 'breaks' argument = cut points inside bin.width,
+  # this apparently does not include the endpoints
+  
+  breaks <- bins - 1
+  
+  vec[[1]] <- lower
+  
+  for (i in 2:breaks) {
+    vec[[i]] <- lower + (bin.width * (i))
+  }
+  
+  vec[[bins]] <- upper
+
+  # note vec[[bins]] = upper   (its the max value)
+  
+  return(vec)
+}
+
+addBins <- function(input.tbl, computedBreaks) {
+  
+  # accept input of x and y coordinates
+  # define 16 bins and count how many points occur
+  # in each bin
+  # return x= bin number ; y=bin count
+  
+  # https://stackoverflow.com/questions/12979456/categorize-numeric-variable-into-group-bins-breaks
+  
+  bin.tbl <- input.tbl %>%
+                dplyr::mutate(bin = cut(x.value, 
+                      #  breaks = c(-1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5),
+                        breaks = computedBreaks,
+                        include.lowest = T, right = T, labels = F))
+  # "labels=F" returns an integer vector of level codes
+                
+                    
+  return(bin.tbl)
+  
+}
+  
+  
+```
+
+```{r}
+
+
+
+
+
+```
+
