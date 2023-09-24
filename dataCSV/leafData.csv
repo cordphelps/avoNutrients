@@ -1,4 +1,6 @@
 ranch,domain,location,year,sample date,sample month,report date,month,Nitrogen ,Phosphorous,Potassium,Calcium,Magnesium,Zinc,Manganese ,Iron ,Copper ,Boron ,Sodium
+phelps,leaf,block1,2023,9/15/23,9,,2023.9,2.72,0.197,0.976,2.13,0.626,,,,,,
+phelps,leaf,block2,2023,9/15/23,9,,2023.9,2.53,0.172,0.956,1.65,0.585,,,,,,
 phelps,leaf,block1,2023,,8,,2023.8,2.42,0.154,0.89,2.3,0.573,,,,,,
 phelps,leaf,block2,2023,,8,,2023.8,2.31,0.13,0.739,2.29,0.698,,,,,,
 phelps,leaf,block1,2023,7/13/23,7,,2023.7,1.73,0.109,0.707,2.88,0.689,,,,,,
