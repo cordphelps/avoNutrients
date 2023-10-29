@@ -31,6 +31,21 @@ library(dplyr)
 
 setwd("/Users/rcphelps/code/avoNutrients")
 
+# $ git add .
+# $ git commit -m "sept"
+# [main 4a79d61] sept
+#  1 file changed, 2 insertions(+)
+# $ git push -u origin main
+# Counting objects: 4, done.
+# Delta compression using up to 8 threads.
+# # Compressing objects: 100% (4/4), done.
+# Writing objects: 100% (4/4), 418 bytes | 418.00 KiB/s, done.
+# Total 4 (delta 3), reused 0 (delta 0)
+# remote: Resolving deltas: 100% (3/3), completed with 3 local objects.
+# To github.com:cordphelps/avoNutrients.git
+#    47c9924..4a79d61  main -> main
+# Branch 'main' set up to track remote branch 'main' from 'origin'.
+
 leaf.url <- c("https://raw.githubusercontent.com/cordphelps/avoNutrients/master/dataCSV/leafData.csv")
 
 leaf.tibl <- dplyr::as_tibble(read.csv(file=leaf.url, header=TRUE, row.names=NULL))
@@ -87,7 +102,7 @@ if (FALSE) {
   
   
   
-  gg <- plotMaterialMonthly(tibble=tibl) 
+  gg <- plotMaterialMonthly(tibl=tibl) 
   
   print(gg)
 
