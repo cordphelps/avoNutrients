@@ -1,0 +1,65 @@
+---
+title: "oceanic"
+output: 
+ github_document: default
+ 
+always_allow_html: true
+---
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, results='hide')
+
+# https://yihui.org/knitr/options/
+
+# echo: (TRUE; logical or numeric) Whether to display the source code
+# results: ('markup'; character) Controls how to display the text results.
+# warning: (TRUE; logical) Whether to preserve warnings
+# error: (TRUE; logical) Whether to preserve errors
+# include: (TRUE; logical) Whether to include the chunk output in the output document.
+# 
+#$$$$$$$$$$$$
+```
+
+```{r localCode, echo=FALSE, results=FALSE, include=FALSE}
+##
+# install.packages('rethinking')
+#
+library(tidyverse)
+
+d <- tribble(
+~culture, ~pop, ~contact, ~tools,
+"a", 1100, 'low', 13,
+"b", 1500, 'low', 22,
+"c", 3600, 'low', 24,
+"d", 4791, 'high', 43,
+"e", 7400, 'high', 33,
+"f", 8000, 'high', 19,
+"g", 9200, 'high', 40,
+"f", 13000, 'low', 28,
+"g", 17500, 'high', 55,
+"h", 275000, 'low', 21
+)
+
+
+#library(rethinking)
+#data(Kline)
+#d <- Kline
+
+d$log_pop <- log(d$pop)
+d$contact_high <- ifelse(d$contact=='high', 1, 0)
+
+m10.10 <- purrr::map(
+  base::alist(total_tools ~ dpois(lambda),
+    log(lambda) <- a + bp*log_pop + bc*contact_high + bpc*contact_high*log_pop,
+    a ~ dnorm(0,100),
+    c(bp,bc,bpc) ~ dnorm(0,1)
+  ),
+  data = d)
+
+
+
+
+```
